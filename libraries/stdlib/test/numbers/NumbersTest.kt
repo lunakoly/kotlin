@@ -124,6 +124,14 @@ class NumbersTest {
         doTestNumber(Float.NaN, isNaN = true)
     }
 
+    @Test fun floatFitsInFloatArray() {
+        val values = listOf(1.0F, 0.0F, Float.MAX_VALUE, Float.MIN_VALUE, Float.POSITIVE_INFINITY, Float.NEGATIVE_INFINITY, Float.NaN)
+        val valuesArray = values.toFloatArray()
+
+        for (index in values.indices) {
+            assertAlmostEquals(values[index], valuesArray[index], 0.0000001 * values[index])
+        }
+    }
 
     private fun doTestNumber(value: Double, isNaN: Boolean = false, isInfinite: Boolean = false) {
         assertEquals(isNaN, value.isNaN(), "Expected $value to have isNaN: $isNaN")
