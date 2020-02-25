@@ -27,3 +27,5 @@ internal actual inline fun testOnNonJvm6And7(f: () -> Unit) {
 }
 public actual fun testOnJvm(action: () -> Unit) = action()
 public actual fun testOnJs(action: () -> Unit) {}
+
+public actual val isFloat32RangeEnforced: Boolean = true

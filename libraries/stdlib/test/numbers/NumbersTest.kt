@@ -5,6 +5,7 @@
 
 package test.numbers
 
+import test.isFloat32RangeEnforced
 import kotlin.random.Random
 import kotlin.test.*
 
@@ -91,9 +92,11 @@ class NumbersTest {
         assertTrue(Float.MAX_VALUE > 0)
 
         // overflow behavior
-        expect(Float.POSITIVE_INFINITY) { Float.MAX_VALUE * 2 }
-        expect(Float.NEGATIVE_INFINITY) { -Float.MAX_VALUE * 2 }
-        expect(0.0F) { Float.MIN_VALUE / 2.0F }
+        if (isFloat32RangeEnforced) {
+            expect(Float.POSITIVE_INFINITY) { Float.MAX_VALUE * 2 }
+            expect(Float.NEGATIVE_INFINITY) { -Float.MAX_VALUE * 2 }
+            expect(0.0F) { Float.MIN_VALUE / 2.0F }
+        }
     }
 
     @Test fun charMinMaxValues() {
@@ -162,11 +165,24 @@ class NumbersTest {
     @Test fun floatToBits() {
         val PI_F = kotlin.math.PI.toFloat()
         assertEquals(0x40490fdb, PI_F.toBits())
-        assertAlmostEquals(PI_F, Float.fromBits(0x40490fdb)) // PI_F is actually Double in JS
-        // -Float.MAX_VALUE, Float.MAX_VALUE, -Float.MIN_VALUE, Float.MIN_VALUE: overflow or underflow
+        if (isFloat32RangeEnforced) {
+            assertEquals(PI_F, Float.fromBits(0x40490fdb))
+        } else {
+            assertAlmostEquals(PI_F, Float.fromBits(0x40490fdb)) // PI_F is actually Double in JS
+        }
         for (value in listOf(Float.NEGATIVE_INFINITY, -1.0F, -0.0F, 0.0F, Float.POSITIVE_INFINITY, 1.0F)) {
             assertEquals(value, Float.fromBits(value.toBits()))
             assertEquals(value, Float.fromBits(value.toRawBits()))
+        }
+
+        for (value in listOf(-Float.MAX_VALUE, Float.MAX_VALUE, -Float.MIN_VALUE, Float.MIN_VALUE)) {
+            if (isFloat32RangeEnforced) {
+                assertEquals(value, Float.fromBits(value.toBits()))
+                assertEquals(value, Float.fromBits(value.toRawBits()))
+            } else {
+                assertAlmostEquals(value, Float.fromBits(value.toBits()), 0.0000001 * value)
+                assertAlmostEquals(value, Float.fromBits(value.toRawBits()), 0.0000001 * value)
+            }
         }
 
         assertTrue(Float.NaN.toBits().let(Float.Companion::fromBits).isNaN())
@@ -195,6 +211,9 @@ class NumbersTest {
         testSizes(Short, Short.SIZE_BYTES, Short.SIZE_BITS, 2)
         testSizes(Int, Int.SIZE_BYTES, Int.SIZE_BITS, 4)
         testSizes(Long, Long.SIZE_BYTES, Long.SIZE_BITS, 8)
+        
+        testSizes(Float, Float.SIZE_BYTES, Float.SIZE_BITS, 4)
+        testSizes(Double, Double.SIZE_BYTES, Double.SIZE_BITS, 8)
 
         testSizes(UByte, UByte.SIZE_BYTES, UByte.SIZE_BITS, 1)
         testSizes(UShort, UShort.SIZE_BYTES, UShort.SIZE_BITS, 2)
