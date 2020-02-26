@@ -129,7 +129,9 @@ class NumbersTest {
         val valuesArray = values.toFloatArray()
 
         for (index in values.indices) {
-            assertAlmostEquals(values[index], valuesArray[index], 0.0000001 * values[index])
+            val value = values[index]
+            val tolerance = if (value == Float.MIN_VALUE) 0.001 * value else 0.0000001 * value
+            assertAlmostEquals(value, valuesArray[index], tolerance)
         }
     }
 
