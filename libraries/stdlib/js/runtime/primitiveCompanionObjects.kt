@@ -32,8 +32,7 @@ internal object DoubleCompanionObject {
 @JsName("FloatCompanionObject")
 internal  object FloatCompanionObject {
     @JsName("MIN_VALUE")
-    @Suppress("CONST_VAL_WITH_NON_CONST_INITIALIZER")
-    const val MIN_VALUE: Float = 1.40129846E-45.toFloat()
+    const val MIN_VALUE: Float = 1.4E-45F
 
     @JsName("MAX_VALUE")
     const val MAX_VALUE: Float = 3.4028235E38F
