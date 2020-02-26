@@ -188,8 +188,9 @@ class NumbersTest {
                 assertEquals(value, Float.fromBits(value.toBits()))
                 assertEquals(value, Float.fromBits(value.toRawBits()))
             } else {
-                assertAlmostEquals(value, Float.fromBits(value.toBits()), 0.0000001 * value)
-                assertAlmostEquals(value, Float.fromBits(value.toRawBits()), 0.0000001 * value)
+                val tolerance = if (kotlin.math.abs(value) == Float.MIN_VALUE) 0.001 * value else 0.0000001 * value
+                assertAlmostEquals(value, Float.fromBits(value.toBits()), tolerance)
+                assertAlmostEquals(value, Float.fromBits(value.toRawBits()), tolerance)
             }
         }
 
