@@ -495,14 +495,14 @@ val IrFunction.allParameters: List<IrValueParameter>
         explicitParameters
     }
 
-fun IrClass.addFakeOverrides() {
+fun IrClass.addFakeOverrides(implementedMebers: List<IrSimpleFunction> = emptyList()) {
     fun IrDeclaration.toList() = when (this) {
         is IrSimpleFunction -> listOf(this)
         is IrProperty -> listOfNotNull(getter, setter)
         else -> emptyList()
     }
 
-    val overriddenFunctions = declarations
+    val overriddenFunctions = (declarations + implementedMebers)
         .flatMap { it.toList() }
         .flatMap { it.overriddenSymbols.map { it.owner } }
         .toSet()
