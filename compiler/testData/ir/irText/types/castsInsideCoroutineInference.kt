@@ -2,6 +2,31 @@
 
 import kotlin.experimental.ExperimentalTypeInference
 
+class SafeCollector<T> constructor(
+    internal val collector: FlowCollector<T>
+) : FlowCollector<T> {
+    override suspend fun emit(value: T) {}
+}
+
+public fun <T> Flow<T>.onCompletion(
+    action: suspend FlowCollector<T>.(cause: Throwable?) -> Unit
+): Flow<T> = unsafeFlow {
+    val safeCollector = SafeCollector(this)
+    safeCollector.invokeSafely(action)
+}
+
+suspend fun <T> FlowCollector<T>.invokeSafely(
+    action: suspend FlowCollector<T>.(cause: Throwable?) -> Unit
+) {
+}
+
+@OptIn(ExperimentalTypeInference::class)
+inline fun <T> unsafeFlow(@BuilderInference crossinline block: suspend FlowCollector<T>.() -> Unit): Flow<T> = TODO()
+
+@Deprecated(level = DeprecationLevel.HIDDEN, message = "binary compatibility with a version w/o FlowCollector receiver")
+public fun <T> Flow<T>.onCompletion(action: suspend (cause: Throwable?) -> Unit) =
+    onCompletion { action(it) }
+
 private fun CoroutineScope.asFairChannel(flow: Flow<*>): ReceiveChannel<Any> = produce {
     val channel = channel as ChannelCoroutine<Any>
     flow.collect { value ->

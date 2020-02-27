@@ -139,8 +139,6 @@ class KotlinResolutionCallbacksImpl(
             if (expectedReturnType == null) ContextDependency.DEPENDENT else ContextDependency.INDEPENDENT
         )
 
-        trace.record(BindingContext.NEW_INFERENCE_LAMBDA_INFO, psiCallArgument.ktFunction, lambdaInfo)
-
         val builtIns = outerCallContext.scope.ownerDescriptor.builtIns
 
         // We have to refine receiverType because resolve inside lambda needs proper scope from receiver,
@@ -179,8 +177,12 @@ class KotlinResolutionCallbacksImpl(
                 null
             }
 
+        val temporaryTrace = TemporaryBindingTrace.create(trace, "Trace to resove lambda $lambdaArgument")
+
+        temporaryTrace.record(BindingContext.NEW_INFERENCE_LAMBDA_INFO, psiCallArgument.ktFunction, lambdaInfo)
+
         val actualContext = outerCallContext
-            .replaceBindingTrace(trace)
+            .replaceBindingTrace(temporaryTrace)
             .replaceContextDependency(lambdaInfo.contextDependency)
             .replaceExpectedType(approximatesExpectedType)
             .replaceDataFlowInfo(psiCallArgument.dataFlowInfoBeforeThisArgument).let {
@@ -188,7 +190,13 @@ class KotlinResolutionCallbacksImpl(
             }
 
         val functionTypeInfo = expressionTypingServices.getTypeInfo(psiCallArgument.expression, actualContext)
-        trace.record(BindingContext.NEW_INFERENCE_LAMBDA_INFO, psiCallArgument.ktFunction, LambdaInfo.STUB_EMPTY)
+        temporaryTrace.record(BindingContext.NEW_INFERENCE_LAMBDA_INFO, psiCallArgument.ktFunction, LambdaInfo.STUB_EMPTY)
+
+        if (coroutineSession?.hasInapplicableCall() == true) {
+            return ReturnArgumentsAnalysisResult(ReturnArgumentsInfo.empty, coroutineSession, hasInapplicableCallForBuilderInference = true)
+        } else {
+            temporaryTrace.commit()
+        }
 
         var hasReturnWithoutExpression = false
         var returnArgumentFound = false

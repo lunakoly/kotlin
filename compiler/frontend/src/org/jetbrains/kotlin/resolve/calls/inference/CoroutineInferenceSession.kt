@@ -52,6 +52,7 @@ class CoroutineInferenceSession(
 ) {
     private val commonCalls = arrayListOf<PSICompletedCallInfo>()
     private val diagnostics = arrayListOf<KotlinCallDiagnostic>()
+    private var hasInapplicableCall = false
 
     override fun shouldRunCompletion(candidate: KotlinResolutionCandidate): Boolean {
         val system = candidate.getSystem() as NewConstraintSystemImpl
@@ -85,9 +86,11 @@ class CoroutineInferenceSession(
             )
 
         if (!isApplicableCall) {
-            diagnostics.add(NonApplicableCallForBuilderInferenceDiagnostic(callInfo.callResolutionResult.resultCallAtom.atom))
+            hasInapplicableCall = true
         }
     }
+
+    fun hasInapplicableCall(): Boolean = hasInapplicableCall
 
     override fun writeOnlyStubs(callInfo: SingleCallResolutionResult): Boolean {
         return !skipCall(callInfo)
