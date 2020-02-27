@@ -189,8 +189,15 @@ class KotlinResolutionCallbacksImpl(
                 if (coroutineSession != null) it.replaceInferenceSession(coroutineSession) else it
             }
 
+        if (coroutineSession == null) {
+            setSkipCallsForCurrentCoroutineSession(actualContext, skip = true)
+        }
         val functionTypeInfo = expressionTypingServices.getTypeInfo(psiCallArgument.expression, actualContext)
         temporaryTrace.record(BindingContext.NEW_INFERENCE_LAMBDA_INFO, psiCallArgument.ktFunction, LambdaInfo.STUB_EMPTY)
+
+        if (coroutineSession == null) {
+            setSkipCallsForCurrentCoroutineSession(actualContext, skip = false)
+        }
 
         if (coroutineSession?.hasInapplicableCall() == true) {
             return ReturnArgumentsAnalysisResult(ReturnArgumentsInfo.empty, coroutineSession, hasInapplicableCallForBuilderInference = true)
@@ -242,6 +249,13 @@ class KotlinResolutionCallbacksImpl(
             ),
             coroutineSession
         )
+    }
+
+    private fun setSkipCallsForCurrentCoroutineSession(context: BasicCallResolutionContext, skip: Boolean) {
+        val currentInferenceSession = context.inferenceSession
+        if (currentInferenceSession is CoroutineInferenceSession) {
+            currentInferenceSession.skipCallApplicability = skip
+        }
     }
 
     private fun getLastDeparentesizedExpression(psiCallArgument: PSIKotlinCallArgument): KtExpression? {

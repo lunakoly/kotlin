@@ -53,6 +53,7 @@ class CoroutineInferenceSession(
     private val commonCalls = arrayListOf<PSICompletedCallInfo>()
     private val diagnostics = arrayListOf<KotlinCallDiagnostic>()
     private var hasInapplicableCall = false
+    var skipCallApplicability = false
 
     override fun shouldRunCompletion(candidate: KotlinResolutionCandidate): Boolean {
         val system = candidate.getSystem() as NewConstraintSystemImpl
@@ -78,6 +79,8 @@ class CoroutineInferenceSession(
         if (skipCall(callInfo.callResolutionResult)) return
 
         commonCalls.add(callInfo)
+
+        if (skipCallApplicability) return
 
         val isApplicableCall =
             callComponents.statelessCallbacks.isApplicableCallForBuilderInference(

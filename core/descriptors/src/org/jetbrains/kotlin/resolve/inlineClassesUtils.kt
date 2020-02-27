@@ -10,6 +10,7 @@ import org.jetbrains.kotlin.incremental.components.NoLookupLocation
 import org.jetbrains.kotlin.types.KotlinType
 import org.jetbrains.kotlin.types.TypeUtils
 import org.jetbrains.kotlin.utils.addToStdlib.safeAs
+import kotlin.experimental.ExperimentalTypeInference
 
 fun ClassDescriptor.underlyingRepresentation(): ValueParameterDescriptor? {
     if (!isInline) return null
