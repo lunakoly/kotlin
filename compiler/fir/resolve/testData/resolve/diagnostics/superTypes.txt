@@ -1,0 +1,105 @@
+FILE: superTypes.kt
+    public open class classA : R|kotlin/Any| {
+        public constructor(string1: R|kotlin/String|): R|classA| {
+            super<R|kotlin/Any|>()
+        }
+
+        public final val string2: R|kotlin/String|
+            public get(): R|kotlin/String|
+
+        init {
+            this@R|/classA|.R|/classA.string2| = R|<local>/string1|
+        }
+
+    }
+    public open class classB : R|IA| {
+        public constructor(): R|classB| {
+            super<R|kotlin/Any|>()
+        }
+
+    }
+    public open class classC : R|kotlin/Any| {
+        public constructor(): R|classC| {
+            super<R|kotlin/Any|>()
+        }
+
+    }
+    public final class classD : R|kotlin/Any| {
+        public constructor(): R|classD| {
+            super<R|kotlin/Any|>()
+        }
+
+    }
+    public final class classManyClasses : R|classB|, R|classC| {
+        public constructor(): R|classManyClasses| {
+            super<R|kotlin/Any|>()
+        }
+
+    }
+    public final class classSupertypeTwice : R|IA|, R|IA| {
+        public constructor(): R|classSupertypeTwice| {
+            super<R|kotlin/Any|>()
+        }
+
+    }
+    public final class classSupertypeNotInited : R|classA| {
+        public constructor(): R|classSupertypeNotInited| {
+            super<R|kotlin/Any|>()
+        }
+
+    }
+    public final class classFinalSupertype : R|classD| {
+        public constructor(): R|classFinalSupertype| {
+            super<R|kotlin/Any|>()
+        }
+
+    }
+    public final class classWithSingleton : R|OSingleton| {
+        public constructor(): R|classWithSingleton| {
+            super<R|kotlin/Any|>()
+        }
+
+    }
+    public abstract interface IA : R|kotlin/Any| {
+    }
+    public abstract interface IwithSuperclass : R|classA| {
+        public abstract fun t(): R|kotlin/Unit|
+
+    }
+    public open enum class enumA : R|kotlin/Enum<enumA>| {
+        private constructor(): R|enumA| {
+            super<R|kotlin/Enum<enumA>|>()
+        }
+
+        public final static enum entry eA: R|enumA|
+        public final static enum entry eB: R|enumA|
+        public final static fun values(): R|kotlin/Array<enumA>| {
+        }
+
+        public final static fun valueOf(value: R|kotlin/String|): R|enumA| {
+        }
+
+    }
+    public final enum class enumWithClass : R|classA|, R|kotlin/Enum<enumWithClass>| {
+        private constructor(): R|enumWithClass| {
+            super<R|kotlin/Enum<enumWithClass>|>()
+        }
+
+        public final static enum entry eA: R|enumWithClass|
+        public final static enum entry eB: R|enumWithClass|
+        public final static fun values(): R|kotlin/Array<enumWithClass>| {
+        }
+
+        public final static fun valueOf(value: R|kotlin/String|): R|enumWithClass| {
+        }
+
+    }
+    public final object OSingleton : R|kotlin/Any| {
+        private constructor(): R|OSingleton| {
+            super<R|kotlin/Any|>()
+        }
+
+        public final fun foo(): R|kotlin/Unit| {
+        }
+
+    }

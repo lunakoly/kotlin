@@ -583,6 +583,11 @@ public class FirDiagnosticsWithLightTreeTestGenerated extends AbstractFirDiagnos
         public void testInfixFunctions() throws Exception {
             runTest("compiler/fir/resolve/testData/resolve/diagnostics/infixFunctions.kt");
         }
+
+        @TestMetadata("superTypes.kt")
+        public void testSuperTypes() throws Exception {
+            runTest("compiler/fir/resolve/testData/resolve/diagnostics/superTypes.kt");
+        }
     }
 
     @TestMetadata("compiler/fir/resolve/testData/resolve/expresssions")
