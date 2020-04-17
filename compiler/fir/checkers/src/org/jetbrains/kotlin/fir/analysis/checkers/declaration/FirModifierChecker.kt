@@ -6,6 +6,9 @@
 package org.jetbrains.kotlin.fir.analysis.checkers.declaration
 
 import org.jetbrains.kotlin.KtNodeTypes
+import org.jetbrains.kotlin.descriptors.annotations.KotlinTarget
+import org.jetbrains.kotlin.descriptors.annotations.KotlinTarget.*
+import org.jetbrains.kotlin.fir.*
 import org.jetbrains.kotlin.fir.FirSourceElement
 import org.jetbrains.kotlin.fir.analysis.checkers.FirModifier
 import org.jetbrains.kotlin.fir.analysis.checkers.FirModifierList
@@ -21,6 +24,7 @@ import org.jetbrains.kotlin.fir.declarations.FirValueParameter
 import org.jetbrains.kotlin.fir.declarations.impl.FirDefaultPropertyAccessor
 import org.jetbrains.kotlin.lexer.KtModifierKeywordToken
 import org.jetbrains.kotlin.lexer.KtTokens.*
+import java.util.*
 
 object FirModifierChecker : FirDeclarationChecker<FirDeclaration>() {
 
@@ -33,6 +37,59 @@ object FirModifierChecker : FirDeclarationChecker<FirDeclaration>() {
         REPEATED,               // first and second are the same: error
         INCOMPATIBLE,           // pair is incompatible: error
     }
+
+    private val commonVisibilityTargets = EnumSet.of(
+        CLASS_ONLY, OBJECT, INTERFACE, ENUM_CLASS, ANNOTATION_CLASS,
+        MEMBER_FUNCTION, TOP_LEVEL_FUNCTION, PROPERTY_GETTER, PROPERTY_SETTER,
+        MEMBER_PROPERTY, TOP_LEVEL_PROPERTY, CONSTRUCTOR, TYPEALIAS
+    )
+
+    private val baseMultiplatformTargets = EnumSet.of(
+        TOP_LEVEL_FUNCTION, TOP_LEVEL_PROPERTY, CLASS_ONLY, OBJECT, INTERFACE, ENUM_CLASS, ANNOTATION_CLASS
+    )
+
+    private val extendedMultiplatformTargets = baseMultiplatformTargets + EnumSet.of(
+        MEMBER_FUNCTION, MEMBER_PROPERTY, CONSTRUCTOR, TYPEALIAS
+    )
+
+    val keywordToPossibleTargetsMap = mapOf<KtModifierKeywordToken, Set<KotlinTarget>>(
+        PRIVATE_KEYWORD to commonVisibilityTargets,
+        PUBLIC_KEYWORD to commonVisibilityTargets,
+        INTERNAL_KEYWORD to commonVisibilityTargets,
+        PROTECTED_KEYWORD to EnumSet.of(
+            CLASS_ONLY, OBJECT, INTERFACE, ENUM_CLASS, ANNOTATION_CLASS,
+            MEMBER_FUNCTION, PROPERTY_GETTER, PROPERTY_SETTER, MEMBER_PROPERTY, CONSTRUCTOR, TYPEALIAS
+        ),
+        HEADER_KEYWORD to baseMultiplatformTargets,
+        EXPECT_KEYWORD to baseMultiplatformTargets,
+        IMPL_KEYWORD to extendedMultiplatformTargets,
+        ACTUAL_KEYWORD to extendedMultiplatformTargets,
+        ENUM_KEYWORD to EnumSet.of(ENUM_CLASS),
+        ABSTRACT_KEYWORD to EnumSet.of(CLASS_ONLY, LOCAL_CLASS, INTERFACE, MEMBER_PROPERTY, MEMBER_FUNCTION),
+        OPEN_KEYWORD to EnumSet.of(CLASS_ONLY, LOCAL_CLASS, INTERFACE, MEMBER_PROPERTY, MEMBER_FUNCTION),
+        FINAL_KEYWORD to EnumSet.of(CLASS_ONLY, LOCAL_CLASS, ENUM_CLASS, OBJECT, MEMBER_PROPERTY, MEMBER_FUNCTION),
+        SEALED_KEYWORD to EnumSet.of(CLASS_ONLY),
+        INNER_KEYWORD to EnumSet.of(CLASS_ONLY),
+        OVERRIDE_KEYWORD to EnumSet.of(MEMBER_PROPERTY, MEMBER_FUNCTION),
+        IN_KEYWORD to EnumSet.of(TYPE_PARAMETER, TYPE_PROJECTION),
+        OUT_KEYWORD to EnumSet.of(TYPE_PARAMETER, TYPE_PROJECTION),
+        REIFIED_KEYWORD to EnumSet.of(TYPE_PARAMETER),
+        VARARG_KEYWORD to EnumSet.of(VALUE_PARAMETER, PROPERTY_PARAMETER),
+        COMPANION_KEYWORD to EnumSet.of(OBJECT),
+        LATEINIT_KEYWORD to EnumSet.of(MEMBER_PROPERTY, TOP_LEVEL_PROPERTY, LOCAL_VARIABLE),
+        DATA_KEYWORD to EnumSet.of(CLASS_ONLY, LOCAL_CLASS),
+        INLINE_KEYWORD to EnumSet.of(FUNCTION, PROPERTY, PROPERTY_GETTER, PROPERTY_SETTER, CLASS_ONLY),
+        NOINLINE_KEYWORD to EnumSet.of(VALUE_PARAMETER),
+        TAILREC_KEYWORD to EnumSet.of(FUNCTION),
+        SUSPEND_KEYWORD to EnumSet.of(MEMBER_FUNCTION, TOP_LEVEL_FUNCTION, LOCAL_FUNCTION),
+        EXTERNAL_KEYWORD to EnumSet.of(FUNCTION, PROPERTY, PROPERTY_GETTER, PROPERTY_SETTER, CLASS),
+        ANNOTATION_KEYWORD to EnumSet.of(ANNOTATION_CLASS),
+        CROSSINLINE_KEYWORD to EnumSet.of(VALUE_PARAMETER),
+        CONST_KEYWORD to EnumSet.of(MEMBER_PROPERTY, TOP_LEVEL_PROPERTY),
+        OPERATOR_KEYWORD to EnumSet.of(FUNCTION),
+        INFIX_KEYWORD to EnumSet.of(FUNCTION),
+        FUN_KEYWORD to EnumSet.of(INTERFACE)
+    )
 
     // first modifier in pair should also be first in spelling order and declaration's modifier list
     private val compatibilityTypeMap = hashMapOf<Pair<KtModifierKeywordToken, KtModifierKeywordToken>, CompatibilityType>()

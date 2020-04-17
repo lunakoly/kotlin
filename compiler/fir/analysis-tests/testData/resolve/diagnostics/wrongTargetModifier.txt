@@ -1,0 +1,25 @@
+FILE: wrongTargetModifier.kt
+    public final class A : R|kotlin/Any| {
+        public constructor(): R|A| {
+            super<R|kotlin/Any|>()
+        }
+
+        public final val B: R|kotlin/Int|
+            public get(): R|kotlin/Int|
+
+        public final val C: R|kotlin/Int|
+            public get(): R|kotlin/Int|
+
+        init {
+            this@R|/A|.R|/A.B| = Int(4)
+            this@R|/A|.R|/A.C| = Int(8)
+        }
+
+        public final val D: R|kotlin/Int|
+            public get(): R|kotlin/Int|
+
+        init {
+            this@R|/A|.R|/A.D| = Int(12)
+        }
+
+    }

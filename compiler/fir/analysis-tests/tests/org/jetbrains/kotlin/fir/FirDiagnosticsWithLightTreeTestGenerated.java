@@ -830,6 +830,11 @@ public class FirDiagnosticsWithLightTreeTestGenerated extends AbstractFirDiagnos
         public void testSuperclassNotAccessibleFromInterface() throws Exception {
             runTest("compiler/fir/analysis-tests/testData/resolve/diagnostics/superclassNotAccessibleFromInterface.kt");
         }
+
+        @TestMetadata("wrongTargetModifier.kt")
+        public void testWrongTargetModifier() throws Exception {
+            runTest("compiler/fir/analysis-tests/testData/resolve/diagnostics/wrongTargetModifier.kt");
+        }
     }
 
     @TestMetadata("compiler/fir/analysis-tests/testData/resolve/expresssions")
