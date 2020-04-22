@@ -5,16 +5,19 @@
 
 package org.jetbrains.kotlin.fir.analysis.checkers.declaration
 
+import com.intellij.lang.LighterASTNode
+import com.intellij.openapi.util.Ref
 import org.jetbrains.kotlin.KtNodeTypes
 import org.jetbrains.kotlin.descriptors.annotations.KotlinTarget
 import org.jetbrains.kotlin.descriptors.annotations.KotlinTarget.*
-import org.jetbrains.kotlin.fir.*
+import org.jetbrains.kotlin.fir.FirLightSourceElement
 import org.jetbrains.kotlin.fir.FirSourceElement
 import org.jetbrains.kotlin.fir.analysis.checkers.FirModifier
 import org.jetbrains.kotlin.fir.analysis.checkers.FirModifierList
 import org.jetbrains.kotlin.fir.analysis.checkers.context.CheckerContext
 import org.jetbrains.kotlin.fir.analysis.checkers.getModifierList
 import org.jetbrains.kotlin.fir.analysis.checkers.source
+import org.jetbrains.kotlin.fir.analysis.checkers.util.FirToKotlinTargetMapper
 import org.jetbrains.kotlin.fir.analysis.diagnostics.DiagnosticReporter
 import org.jetbrains.kotlin.fir.analysis.diagnostics.FirErrors
 import org.jetbrains.kotlin.fir.declarations.FirClass
@@ -22,6 +25,8 @@ import org.jetbrains.kotlin.fir.declarations.FirDeclaration
 import org.jetbrains.kotlin.fir.declarations.FirProperty
 import org.jetbrains.kotlin.fir.declarations.FirValueParameter
 import org.jetbrains.kotlin.fir.declarations.impl.FirDefaultPropertyAccessor
+import org.jetbrains.kotlin.fir.lightNode
+import org.jetbrains.kotlin.fir.psi
 import org.jetbrains.kotlin.lexer.KtModifierKeywordToken
 import org.jetbrains.kotlin.lexer.KtTokens.*
 import java.util.*
@@ -172,7 +177,8 @@ object FirModifierChecker : FirDeclarationChecker<FirDeclaration>() {
         val firstToken = firstModifier.token
         val secondToken = secondModifier.token
         when (val compatibilityType = deduceCompatibilityType(firstToken, secondToken)) {
-            CompatibilityType.COMPATIBLE -> {}
+            CompatibilityType.COMPATIBLE -> {
+            }
             CompatibilityType.REPEATED ->
                 if (reportedNodes.add(secondModifier)) reporter.reportRepeatedModifier(secondModifier, secondToken)
             CompatibilityType.REDUNDANT_2_TO_1 ->
@@ -196,6 +202,7 @@ object FirModifierChecker : FirDeclarationChecker<FirDeclaration>() {
     private fun checkModifiers(
         list: FirModifierList,
         owner: FirDeclaration,
+        actualTargets: Set<KotlinTarget>,
         reporter: DiagnosticReporter
     ) {
         // general strategy: report no more than one error and any number of warnings
@@ -229,7 +236,8 @@ object FirModifierChecker : FirDeclarationChecker<FirDeclaration>() {
         if (context.containingDeclarations.last() is FirDefaultPropertyAccessor) return
 
         val modifierList = source.getModifierList()
-        modifierList?.let { checkModifiers(it, declaration, reporter) }
+        val actualTargets = FirToKotlinTargetMapper.getDeclarationSiteTargets(declaration, context)
+        modifierList?.let { checkModifiers(it, declaration, actualTargets, reporter) }
     }
 
     private fun DiagnosticReporter.reportRepeatedModifier(

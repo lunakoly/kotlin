@@ -1,25 +1,92 @@
 FILE: wrongTargetModifier.kt
-    public final class A : R|kotlin/Any| {
-        public constructor(): R|A| {
+    public final class fields : R|kotlin/Any| {
+        public constructor(): R|fields| {
             super<R|kotlin/Any|>()
         }
 
-        public final val B: R|kotlin/Int|
+        public final val a: R|kotlin/Int| = Int(3)
             public get(): R|kotlin/Int|
 
-        public final val C: R|kotlin/Int|
-            public get(): R|kotlin/Int|
+        public final val b: R|kotlin/Boolean|
+            public get(): R|kotlin/Boolean| {
+                ^ ==(this@R|/fields|.R|/fields.a|, Int(4))
+            }
 
-        init {
-            this@R|/A|.R|/A.B| = Int(4)
-            this@R|/A|.R|/A.C| = Int(8)
+        public final var c: R|kotlin/Int| = Int(0)
+            public get(): R|kotlin/Int|
+            public set(value: R|kotlin/Int|): R|kotlin/Unit|
+
+        public final var d: R|kotlin/Boolean| = Boolean(false)
+            public get(): R|kotlin/Boolean| {
+                ^ ==(this@R|/fields|.R|/fields.c|, Int(4))
+            }
+            public set(value: R|kotlin/Boolean|): R|kotlin/Unit|
+
+        public final var e: R|kotlin/Int| = Int(2)
+            public get(): R|kotlin/Int|
+            public set(value: R|kotlin/Int|): R|kotlin/Unit| {
+                when () {
+                    CMP(>, R|<local>/value|.R|kotlin/Int.compareTo|(Int(0))) ->  {
+                        this@R|/fields|.F|/fields.e| = R|<local>/value|
+                    }
+                }
+
+            }
+
+    }
+    public final object A : R|kotlin/Any| {
+        private constructor(): R|A| {
+            super<R|kotlin/Any|>()
         }
 
-        public final val D: R|kotlin/Int|
-            public get(): R|kotlin/Int|
+        public final inner class E : R|kotlin/Any| {
+            public constructor(): R|A.E| {
+                super<R|kotlin/Any|>()
+            }
 
-        init {
-            this@R|/A|.R|/A.D| = Int(12)
+        }
+
+        public final fun foo(): R|kotlin/Unit| {
+            local final inner class F : R|kotlin/Any| {
+                public[local] constructor(): R|A.F| {
+                    super<R|kotlin/Any|>()
+                }
+
+            }
+
+            local final class G : R|kotlin/Any| {
+                public[local] constructor(): R|A.G| {
+                    super<R|kotlin/Any|>()
+                }
+
+            }
+
+        }
+
+    }
+    public final class B : R|kotlin/Any| {
+        public constructor(): R|B| {
+            super<R|kotlin/Any|>()
+        }
+
+        public final companion object Companion : R|kotlin/Any| {
+            private constructor(): R|B.Companion| {
+                super<R|kotlin/Any|>()
+            }
+
+        }
+
+    }
+    public final class C : R|kotlin/Any| {
+        public constructor(): R|C| {
+            super<R|kotlin/Any|>()
+        }
+
+        public final companion object D : R|kotlin/Any| {
+            private constructor(): R|C.D| {
+                super<R|kotlin/Any|>()
+            }
+
         }
 
     }

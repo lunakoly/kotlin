@@ -1,34 +1,45 @@
-val topLevel = 4
+class fields {
+    val a: Int = 3
 
-class A{
+    val b: Boolean get() = a == 4
 
-    val B: Int
+    var c: Int = 0
 
-    val C: Int
+    var d: Boolean = false
+        get() = c == 4
 
-    init {
-        B = 4
-        C = 8
+    var e: Int = 2
+        set(value) {
+            if (value > 0) field = value
+        }
+}
+
+
+object A {
+    inner class E {
+
     }
 
-    val D: Int
-
-    init {
-        D = 12
-
-        class LC
-        fun bar() {
+    fun foo() {
+        inner class F {
 
         }
-        val LV = 16
-    }
 
+        class G {
+
+        }
+    }
 }
 
-fun foo() {
-    class LC
-    fun bar() {
+class B {
+    companion object {
 
     }
-    val LV = 16
 }
+
+class C {
+    companion object D {
+
+    }
+}
+

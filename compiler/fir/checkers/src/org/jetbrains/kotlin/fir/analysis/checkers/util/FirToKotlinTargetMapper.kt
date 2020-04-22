@@ -11,11 +11,15 @@ import org.jetbrains.kotlin.descriptors.annotations.KotlinTarget
 import org.jetbrains.kotlin.descriptors.annotations.KotlinTarget.*
 import org.jetbrains.kotlin.fir.FirElement
 import org.jetbrains.kotlin.fir.analysis.checkers.context.CheckerContext
+import org.jetbrains.kotlin.fir.analysis.checkers.getModifierList
 import org.jetbrains.kotlin.fir.declarations.*
+import org.jetbrains.kotlin.fir.declarations.impl.FirDefaultPropertyGetter
+import org.jetbrains.kotlin.fir.declarations.impl.FirDefaultPropertySetter
 import org.jetbrains.kotlin.fir.expressions.FirExpression
 import org.jetbrains.kotlin.fir.types.FirStarProjection
 import org.jetbrains.kotlin.fir.types.FirTypeProjection
 import org.jetbrains.kotlin.fir.types.FirTypeRef
+import org.jetbrains.kotlin.lexer.KtTokens
 import java.util.*
 
 object FirToKotlinTargetMapper {
@@ -138,14 +142,29 @@ object FirToKotlinTargetMapper {
         val EMPTY_SET = buildTargetSet()
     }
 
-    // TODO Is CheckerContext information used right? Is extension receiver check necessary (and correct if so)?
+    // TODO Is extension receiver check necessary (and correct if so)?
     private fun isDeclarationTopLevel(element: FirDeclaration, context: CheckerContext): Boolean =
-        context.containingDeclarations.last() is FirFile && if (element is FirCallableDeclaration<*>) element.receiverTypeRef == null else true
+        context.containingDeclarations.last() is FirFile && (element !is FirCallableDeclaration<*> || element.receiverTypeRef == null)
+
+    private fun isDeclarationLocal(context: CheckerContext): Boolean =
+        context.containingDeclarations.last() is FirFunction<*>
+
+    private val FirClass<*>.isInner: Boolean
+        get() = source.getModifierList()?.modifiers?.find { it.token == KtTokens.INNER_KEYWORD } != null
+
+    private val FirClass<*>.isCompanionObject: Boolean
+        get() = source.getModifierList()?.modifiers?.find { it.token == KtTokens.COMPANION_KEYWORD } != null
 
     private val FirMemberDeclaration.isLocal: Boolean get() = status.visibility == Visibilities.LOCAL
 
-    // TODO Can this be implemented better? Should this be moved to FirProperty?
     private val FirProperty.isDestructiveDeclaration: Boolean get() = name.asString() == "<destruct>"
+
+    private val FirProperty.hasBackingField: Boolean
+        get() {
+            // based on the description of backing fields at https://kotlinlang.org/docs/reference/properties.html
+            // TODO How to determine if the backing field was utilized in the property accessors?
+            return getter is FirDefaultPropertyGetter || setter is FirDefaultPropertySetter
+        }
 
     /*
      * see AnnotationChecker.getActualTargetList() and KotlinTarget.classActualTargets()
@@ -153,27 +172,32 @@ object FirToKotlinTargetMapper {
     fun getTargetSet(element: FirElement, context: CheckerContext): TargetSet =
         when (element) {
             is FirFile -> TargetSets.FILE_SET
-            is FirClass<*> -> when (element.classKind) { // TODO should there be an analogue to T_CLASSIFIER like with KtClassOrObject in AnnotationChecker.getActualTargetList()?
-                ClassKind.CLASS -> TargetSets.EMPTY_SET // TODO !!
+            is FirClass<*> -> when (element.classKind) { // TODO Should there be an analogue to T_CLASSIFIER like with KtClassOrObject in AnnotationChecker.getActualTargetList()?
+                ClassKind.CLASS -> {
+                    if (!element.isInner && isDeclarationLocal(context)) TargetSets.LOCAL_CLASS_SET else TargetSets.CLASS_SET
+                }
                 ClassKind.INTERFACE -> TargetSets.INTERFACE_SET
-                ClassKind.ENUM_CLASS -> TargetSets.EMPTY_SET // TODO !!
+                ClassKind.ENUM_CLASS -> {
+                    if (isDeclarationLocal(context)) TargetSets.LOCAL_CLASS_SET else TargetSets.ENUM_CLASS_SET
+                }
                 ClassKind.ENUM_ENTRY -> TargetSets.ENUM_ENTRY_SET
                 ClassKind.ANNOTATION_CLASS -> TargetSets.ANNOTATION_CLASS_SET
-                ClassKind.OBJECT -> TargetSets.EMPTY_SET // TODO !!
+                ClassKind.OBJECT -> {
+                    if (element.isCompanionObject) TargetSets.COMPANION_OBJECT_SET else TargetSets.OBJECT_SET
+                }
             }
             is FirProperty -> when {
                 element.isDestructiveDeclaration -> TargetSets.DESTRUCTURING_DECLARATION_SET
                 element.isLocal -> TargetSets.LOCAL_VARIABLE_SET
                 isDeclarationTopLevel(element, context) -> {
-                    TargetSets.getTopLevelPropertySet(true, element.delegate != null) // TODO !! hasBackingField
+                    TargetSets.getTopLevelPropertySet(element.hasBackingField, element.delegate != null)
                 }
                 else -> {
-                    TargetSets.getMemberPropertySet(true, element.delegate != null) // TODO !! hasBackingField
+                    TargetSets.getMemberPropertySet(element.hasBackingField, element.delegate != null)
                 }
             }
-            // TODO Is this cast adequate or is it too narrowing?
-            is FirSimpleFunction -> when {
-                // isFunctionExpression() clause analogue is to be researched in future
+            is FirSimpleFunction -> when { // TODO Is this cast adequate or is it too narrowing in comparison to KtFunction?
+                // isFunctionExpression() clause analogue is to be examined in future
                 element.isLocal -> TargetSets.LOCAL_FUNCTION_SET
                 isDeclarationTopLevel(element, context) -> TargetSets.TOP_LEVEL_FUNCTION_SET
                 else -> TargetSets.MEMBER_FUNCTION_SET
@@ -183,15 +207,14 @@ object FirToKotlinTargetMapper {
             is FirPropertyAccessor -> {
                 if (element.isGetter) TargetSets.PROPERTY_GETTER_SET else TargetSets.PROPERTY_SETTER_SET
             }
-            // TODO AnnotationChecker.getActualTargetList() was checking val and var keywords (see KtParameter clause), but it seems to be unnecessary now.
             is FirValueParameter -> TargetSets.VALUE_PARAMETER_SET
             is FirTypeParameter -> TargetSets.TYPE_PARAMETER_SET
             is FirTypeProjection -> TargetSets.TYPE_PROJECTION_SET
             is FirStarProjection -> TargetSets.STAR_PROJECTION_SET
             is FirTypeRef -> TargetSets.TYPE_REF_SET
             is FirAnonymousInitializer -> TargetSets.INITIALIZER_SET
-            // KtLambdaExpression clause analogue is to be implemented in future
-            // KtObjectLiteralExpression clause analogue is to be implemented in future
+            // KtLambdaExpression clause analogue is to be examined in future
+            // KtObjectLiteralExpression clause analogue is to be examined in future
             is FirExpression -> TargetSets.EXPRESSION_SET
             else -> TargetSets.EMPTY_SET
         }
