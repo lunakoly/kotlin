@@ -49,9 +49,9 @@ interface G<T> {
 class CG : G<Int> {
     fun test() {
         super<G>.foo() // OK
-        super<G<Int>>.foo() // Warning
-        super<G<E>>.foo() // Error
-        super<G<String>>.foo() // Error
+        super<G<<!TYPE_ARGUMENTS_REDUNDANT_IN_SUPER_QUALIFIER!>Int<!>>>.foo() // Warning
+        super<G<<!INAPPROPRIATE_TYPE_ARGUMENT_IN_SUPER_QUALIFIER!>E<!>>>.foo() // Error
+        super<G<<!INAPPROPRIATE_TYPE_ARGUMENT_IN_SUPER_QUALIFIER!>String<!>>>.foo() // Error
     }
 }
 

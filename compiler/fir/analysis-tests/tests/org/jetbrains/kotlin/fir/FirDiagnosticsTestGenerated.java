@@ -855,6 +855,11 @@ public class FirDiagnosticsTestGenerated extends AbstractFirDiagnosticsTest {
         public void testSuperclassNotAccessibleFromInterface() throws Exception {
             runTest("compiler/fir/analysis-tests/testData/resolve/diagnostics/superclassNotAccessibleFromInterface.kt");
         }
+
+        @TestMetadata("typeArgumentsRedundantInSuperQualifier.kt")
+        public void testTypeArgumentsRedundantInSuperQualifier() throws Exception {
+            runTest("compiler/fir/analysis-tests/testData/resolve/diagnostics/typeArgumentsRedundantInSuperQualifier.kt");
+        }
     }
 
     @TestMetadata("compiler/fir/analysis-tests/testData/resolve/expresssions")
